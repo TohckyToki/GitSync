@@ -33,7 +33,7 @@
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.enableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.settingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainTimer = new System.Windows.Forms.Timer(this.components);
             this.label1 = new System.Windows.Forms.Label();
@@ -61,7 +61,7 @@
             // 
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.enableToolStripMenuItem,
-            this.settingToolStripMenuItem,
+            this.settingsToolStripMenuItem,
             this.openLogToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
@@ -74,12 +74,12 @@
             this.enableToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.enableToolStripMenuItem.Text = "Enable";
             // 
-            // settingToolStripMenuItem
+            // settingsToolStripMenuItem
             // 
-            this.settingToolStripMenuItem.Name = "settingToolStripMenuItem";
-            this.settingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.settingToolStripMenuItem.Text = "Setting";
-            this.settingToolStripMenuItem.Click += new System.EventHandler(this.SettingToolStripMenuItemClick);
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingsToolStripMenuItem.Text = "Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.SettingToolStripMenuItemClick);
             // 
             // exitToolStripMenuItem
             // 
@@ -219,7 +219,7 @@
         private ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.Timer mainTimer;
         private ToolStripMenuItem enableToolStripMenuItem;
-        private ToolStripMenuItem settingToolStripMenuItem;
+        private ToolStripMenuItem settingsToolStripMenuItem;
         private Label label1;
         private ListBox folderListBox;
         private Button saveButton;

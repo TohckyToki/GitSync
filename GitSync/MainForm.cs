@@ -62,13 +62,12 @@ namespace GitSync
         #region Events
         private void MainFormLoad(object? sender, EventArgs e)
         {
+            this.EnsureLogFolderExists();
             this.UpdateLogFile();
             this.LogText($"Application is running.", LogKind.App);
 
             this.mainTimer.Interval = Convert.ToInt32(this.numericUpDown.Value * 1000);
             this.watchFolders = this.folderListBox.Items.Cast<string>().ToArray();
-
-            this.enableToolStripMenuItem.Checked = true;
         }
 
         private void MainFormFormClosing(object? sender, FormClosingEventArgs e)
@@ -82,11 +81,17 @@ namespace GitSync
 
         private void NotifyIconDoubleClick(object? sender, EventArgs e)
         {
-            this.settingToolStripMenuItem.PerformClick();
+            this.settingsToolStripMenuItem.PerformClick();
         }
 
         private void EnableToolStripMenuItemCheckedChanged(object? sender, EventArgs e)
         {
+            if (this.watchFolders.Length == 0)
+            {
+                this.enableToolStripMenuItem.Checked = false;
+                return;
+            }
+
             if (this.enableToolStripMenuItem.Checked)
             {
                 this.mainTimer.Start();
@@ -123,7 +128,7 @@ namespace GitSync
                 MessageBox.Show("​The folder path does not exist.");
                 return;
             }
-            if (!this.folderListBox.Items.Contains(text))
+            if (this.folderListBox.Items.Contains(text))
             {
                 MessageBox.Show("The folder path has already been added.");
                 return;
@@ -211,16 +216,21 @@ namespace GitSync
         }
         #endregion
 
-        private void UpdateLogFile()
+        #region Log Operating
+
+        private void EnsureLogFolderExists()
         {
             string logFolder = Path.Combine(Application.StartupPath, "logs");
             if (!File.Exists(logFolder))
             {
                 Directory.CreateDirectory(logFolder);
             }
+        }
 
+        private void UpdateLogFile()
+        {
             string logFileName = $"{DateTime.Now.ToString("yyyy-MM-dd")}.log";
-            string fullName = Path.Combine(logFolder, logFileName);
+            string fullName = Path.Combine(Application.StartupPath, "logs", logFileName);
             if (!File.Exists(fullName))
             {
                 File.Create(fullName).Close();
@@ -241,6 +251,10 @@ namespace GitSync
                 File.AppendAllLines(this.logFileName, msgs, UTF8Encoding.UTF8);
             }
         }
+
+        #endregion
+
+        #region Watch Git Repositories
 
         private void WatchAllGitRepository()
         {
@@ -321,5 +335,8 @@ namespace GitSync
                 this.notifyIcon.ShowBalloonTip(5000, "GitSync", "Git pulling successfully.", ToolTipIcon.Info);
             }
         }
+
+        #endregion
+
     }
 }

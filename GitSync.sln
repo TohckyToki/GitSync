@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitSync", "GitSync\GitSync.csproj", "{7F66E6C6-E2C0-4792-80E3-8B3EBF4A0935}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GitSync", "GitSync\GitSync.csproj", "{7F66E6C6-E2C0-4792-80E3-8B3EBF4A0935}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A7D3D2D9-3D1D-4D80-8A55-B5B00BACDA2C}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
