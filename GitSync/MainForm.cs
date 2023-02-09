@@ -1,6 +1,4 @@
-using Microsoft.VisualBasic.Logging;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Diagnostics;
 using System.Text;
 
@@ -8,7 +6,7 @@ namespace GitSync
 {
     public partial class MainForm : Form
     {
-        #region Inner enum
+        #region Log kind enum
         private enum LogKind
         {
             App, Info, Error
@@ -19,16 +17,16 @@ namespace GitSync
         private string[] watchFolders = Array.Empty<string>();
         private string logFileName = string.Empty;
         private CancellationTokenSource cancellationTokenSource = new();
-        private List<Task> tasks = new();
-        private bool needClose = false;
+        private readonly List<Task> tasks = new();
+        private bool requestClose = false;
         #endregion
 
         #region Construct
         public MainForm()
         {
-            InitializeComponent();
-            ManuallyInitializeComponent();
-            ApplyConfiguration();
+            this.InitializeComponent();
+            this.ManuallyInitializeComponent();
+            this.ApplyConfiguration();
         }
 
         private void ManuallyInitializeComponent()
@@ -45,15 +43,17 @@ namespace GitSync
             this.numericUpDown.Maximum = 43200;
             this.folderListBox.SelectionMode = SelectionMode.One;
 
-            this.Load += MainFormLoad;
-            this.FormClosing += MainFormFormClosing;
-            this.enableToolStripMenuItem.CheckedChanged += EnableToolStripMenuItemCheckedChanged;
-            this.notifyIcon.DoubleClick += NotifyIcon_DoubleClick;
+            this.Load += this.MainFormLoad;
+            this.FormClosing += this.MainFormFormClosing;
+            this.enableToolStripMenuItem.CheckedChanged += this.EnableToolStripMenuItemCheckedChanged;
+            this.notifyIcon.DoubleClick += this.NotifyIconDoubleClick;
+            this.numericUpDown.Leave += this.NumericUpDownLeave;
         }
 
         private void ApplyConfiguration()
         {
             this.numericUpDown.Value = Properties.Settings.Default.Interval;
+            this.numericUpDown.Controls[1].Text = this.numericUpDown.Value.ToString();
             this.folderListBox.Items.Clear();
             this.folderListBox.Items.AddRange(Properties.Settings.Default.Folders.Cast<string>().ToArray());
         }
@@ -68,26 +68,26 @@ namespace GitSync
             this.mainTimer.Interval = Convert.ToInt32(this.numericUpDown.Value * 1000);
             this.watchFolders = this.folderListBox.Items.Cast<string>().ToArray();
 
-            this.enableToolStripMenuItem.Checked= true;
+            this.enableToolStripMenuItem.Checked = true;
         }
 
         private void MainFormFormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!this.needClose)
+            if (!this.requestClose)
             {
                 e.Cancel = true;
                 this.Hide();
             }
         }
 
-        private void NotifyIcon_DoubleClick(object? sender, EventArgs e)
+        private void NotifyIconDoubleClick(object? sender, EventArgs e)
         {
             this.settingToolStripMenuItem.PerformClick();
         }
 
         private void EnableToolStripMenuItemCheckedChanged(object? sender, EventArgs e)
         {
-            if (enableToolStripMenuItem.Checked)
+            if (this.enableToolStripMenuItem.Checked)
             {
                 this.mainTimer.Start();
                 this.WatchAllGitRepository();
@@ -112,7 +112,7 @@ namespace GitSync
 
         private void AddButtonClick(object sender, EventArgs e)
         {
-            var text = this.folderTextBox.Text;
+            string text = this.folderTextBox.Text;
             if (string.IsNullOrWhiteSpace(text))
             {
                 MessageBox.Show("​The folder path should not be empty.");
@@ -136,10 +136,23 @@ namespace GitSync
         {
             if (this.folderListBox.SelectedItem is null)
             {
-                MessageBox.Show("There should be one item that has been selected at least.");
+                MessageBox.Show("There should be at least one item that has been selected.");
                 return;
             }
             this.folderListBox.Items.Remove(this.folderListBox.SelectedItem);
+        }
+
+        private void NumericUpDownLeave(object? sender, EventArgs e)
+        {
+            if (this.numericUpDown.Controls[1].Text == string.Empty)
+            {
+                this.numericUpDown.Controls[1].Text = this.numericUpDown.Value.ToString();
+            }
+        }
+
+        private void ResetButtonClick(object sender, EventArgs e)
+        {
+            this.ApplyConfiguration();
         }
 
         private void SaveButtonClick(object sender, EventArgs e)
@@ -147,7 +160,7 @@ namespace GitSync
 
             if (this.folderListBox.Items.Count < 1)
             {
-                MessageBox.Show("");
+                MessageBox.Show("There should be at least one item that has been added.");
                 return;
             }
 
@@ -159,43 +172,55 @@ namespace GitSync
             this.mainTimer.Interval = Convert.ToInt32(this.numericUpDown.Value * 1000);
             this.watchFolders = this.folderListBox.Items.Cast<string>().ToArray();
             Properties.Settings.Default.Interval = this.numericUpDown.Value;
-            var sc = new StringCollection();
+            StringCollection sc = new();
             sc.AddRange(this.watchFolders);
             Properties.Settings.Default.Folders = sc;
             Properties.Settings.Default.Save();
 
             MessageBox.Show("The new setting has been applied.");
 
-            if (enableToolStripMenuItem.Checked)
+            if (this.enableToolStripMenuItem.Checked)
             {
                 this.mainTimer.Start();
                 this.WatchAllGitRepository();
             }
         }
 
+        private void OpenLogToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            string? dir = Path.GetDirectoryName(this.logFileName);
+            if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir))
+            {
+                Task.Run(() =>
+                {
+                    Process.Start("explorer", dir);
+                });
+            }
+        }
+
         private void ExitToolStripMenuItemClick(object sender, EventArgs e)
         {
-            this.needClose = true;
-            cancellationTokenSource.Cancel();
+            this.requestClose = true;
+            this.cancellationTokenSource.Cancel();
             this.Close();
         }
 
         private void MainTimerTick(object sender, EventArgs e)
         {
-            WatchAllGitRepository();
+            this.WatchAllGitRepository();
         }
         #endregion
 
         private void UpdateLogFile()
         {
-            var logFolder = Path.Combine(Application.StartupPath, "logs");
+            string logFolder = Path.Combine(Application.StartupPath, "logs");
             if (!File.Exists(logFolder))
             {
                 Directory.CreateDirectory(logFolder);
             }
 
-            var logFileName = $"{DateTime.Now.ToString("yyyy-MM-dd")}.log";
-            var fullName = Path.Combine(logFolder, logFileName);
+            string logFileName = $"{DateTime.Now.ToString("yyyy-MM-dd")}.log";
+            string fullName = Path.Combine(logFolder, logFileName);
             if (!File.Exists(fullName))
             {
                 File.Create(fullName).Close();
@@ -207,7 +232,7 @@ namespace GitSync
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
-                var msgs = new string[] {
+                string[] msgs = new string[] {
                     $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss:ffffff}]",
                     $"[Log from {Enum.GetName(typeof(LogKind), kind)}]",
                     text,
@@ -228,16 +253,16 @@ namespace GitSync
                 this.tasks.Clear();
             }
 
-            foreach (string folder in watchFolders)
+            foreach (string folder in this.watchFolders)
             {
-                var task = new Task(() =>
+                Task task = new(() =>
                 {
                     this.WatchGitStatus(folder);
-                }, cancellationTokenSource.Token);
-                tasks.Add(task);
+                }, this.cancellationTokenSource.Token);
+                this.tasks.Add(task);
                 task.ContinueWith(_ =>
                 {
-                    tasks.Remove(task);
+                    this.tasks.Remove(task);
                 });
                 task.Start();
             }
@@ -245,22 +270,23 @@ namespace GitSync
 
         private void WatchGitStatus(string folder)
         {
-            var process = new Process();
-            process.StartInfo = new ProcessStartInfo
+            Process process = new()
             {
-                WorkingDirectory = folder,
-                FileName = "git",
-                Arguments = "fetch",
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                StandardOutputEncoding = UTF8Encoding.UTF8,
-                StandardErrorEncoding = UTF8Encoding.UTF8,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                StartInfo = new ProcessStartInfo
+                {
+                    WorkingDirectory = folder,
+                    FileName = "git",
+                    Arguments = "fetch",
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                }
             };
-            var output = "";
-            var error = "";
-
+            string? output;
+            string? error;
             do
             {
                 process.Start();

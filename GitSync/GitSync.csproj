@@ -23,4 +23,12 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\fuyong\source\repos\GitSync\GitSync\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\fuyong\source\repos\GitSync\GitSync\.editorconfig" />
+  </ItemGroup>
+
 </Project>

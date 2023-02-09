@@ -44,6 +44,8 @@
             this.addButton = new System.Windows.Forms.Button();
             this.removeButton = new System.Windows.Forms.Button();
             this.folderTextBox = new System.Windows.Forms.TextBox();
+            this.resetButton = new System.Windows.Forms.Button();
+            this.openLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).BeginInit();
             this.SuspendLayout();
@@ -60,21 +62,22 @@
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.enableToolStripMenuItem,
             this.settingToolStripMenuItem,
+            this.openLogToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(112, 70);
+            this.contextMenuStrip.Size = new System.Drawing.Size(181, 114);
             // 
             // enableToolStripMenuItem
             // 
             this.enableToolStripMenuItem.CheckOnClick = true;
             this.enableToolStripMenuItem.Name = "enableToolStripMenuItem";
-            this.enableToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
+            this.enableToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.enableToolStripMenuItem.Text = "Enable";
             // 
             // settingToolStripMenuItem
             // 
             this.settingToolStripMenuItem.Name = "settingToolStripMenuItem";
-            this.settingToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
+            this.settingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.settingToolStripMenuItem.Text = "Setting";
             this.settingToolStripMenuItem.Click += new System.EventHandler(this.SettingToolStripMenuItemClick);
             // 
@@ -82,7 +85,7 @@
             // 
             this.exitToolStripMenuItem.ForeColor = System.Drawing.Color.Red;
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(111, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItemClick);
             // 
@@ -168,11 +171,30 @@
             this.folderTextBox.Size = new System.Drawing.Size(364, 23);
             this.folderTextBox.TabIndex = 8;
             // 
+            // resetButton
+            // 
+            this.resetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.resetButton.Location = new System.Drawing.Point(294, 201);
+            this.resetButton.Name = "resetButton";
+            this.resetButton.Size = new System.Drawing.Size(75, 23);
+            this.resetButton.TabIndex = 9;
+            this.resetButton.Text = "Reset";
+            this.resetButton.UseVisualStyleBackColor = true;
+            this.resetButton.Click += new System.EventHandler(this.ResetButtonClick);
+            // 
+            // openLogToolStripMenuItem
+            // 
+            this.openLogToolStripMenuItem.Name = "openLogToolStripMenuItem";
+            this.openLogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openLogToolStripMenuItem.Text = "Open Log";
+            this.openLogToolStripMenuItem.Click += new System.EventHandler(this.OpenLogToolStripMenuItemClick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(462, 238);
+            this.Controls.Add(this.resetButton);
             this.Controls.Add(this.folderTextBox);
             this.Controls.Add(this.removeButton);
             this.Controls.Add(this.addButton);
@@ -206,5 +228,7 @@
         private Button addButton;
         private Button removeButton;
         private TextBox folderTextBox;
+        private Button resetButton;
+        private ToolStripMenuItem openLogToolStripMenuItem;
     }
 }
