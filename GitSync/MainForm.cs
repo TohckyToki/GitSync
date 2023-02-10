@@ -64,7 +64,7 @@ namespace GitSync
         {
             this.EnsureLogFolderExists();
             this.UpdateLogFile();
-            this.LogText($"Application is running.", LogKind.App);
+            this.LogText(LogKind.App, "Application is running.");
 
             this.mainTimer.Interval = Convert.ToInt32(this.numericUpDown.Value * 1000);
             this.watchFolders = this.folderListBox.Items.Cast<string>().ToArray();
@@ -238,105 +238,112 @@ namespace GitSync
             this.logFileName = fullName;
         }
 
-        private void LogText(string? text, LogKind kind)
+        private void LogText(LogKind kind, string? text, string? workfolder = null)
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
+                text = text.Trim();
+
+                if (!string.IsNullOrWhiteSpace(workfolder))
+                {
+                    text = $"Workfolder: {workfolder}{Environment.NewLine}{text}";
+                }
+
                 string[] msgs = new string[] {
                     $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss:ffffff}]",
                     $"[Log from {Enum.GetName(typeof(LogKind), kind)}]",
                     text,
                     Environment.NewLine
                 };
-                File.AppendAllLines(this.logFileName, msgs, UTF8Encoding.UTF8);
-            }
-        }
-
-        #endregion
-
-        #region Watch Git Repositories
-
-        private void WatchAllGitRepository()
-        {
-            this.UpdateLogFile();
-
-            if (this.tasks.Any())
-            {
-                this.cancellationTokenSource.Cancel();
-                this.cancellationTokenSource = new CancellationTokenSource();
-                this.tasks.Clear();
-            }
-
-            foreach (string folder in this.watchFolders)
-            {
-                Task task = new(() =>
-                {
-                    this.WatchGitStatus(folder);
-                }, this.cancellationTokenSource.Token);
-                this.tasks.Add(task);
-                task.ContinueWith(_ =>
-                {
-                    this.tasks.Remove(task);
-                });
-                task.Start();
-            }
-        }
-
-        private void WatchGitStatus(string folder)
-        {
-            Process process = new()
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    WorkingDirectory = folder,
-                    FileName = "git",
-                    Arguments = "fetch",
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    StandardOutputEncoding = Encoding.UTF8,
-                    StandardErrorEncoding = Encoding.UTF8,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
+                    File.AppendAllLines(this.logFileName, msgs, UTF8Encoding.UTF8);
                 }
-            };
-            string? output;
-            string? error;
-            do
-            {
-                process.Start();
-                process.WaitForExit(-1);
-                output = process.StandardOutput.ReadToEnd();
-                this.LogText(output, LogKind.Info);
-                error = process.StandardError.ReadToEnd();
-                this.LogText(error, LogKind.Error);
-            } while (error.Contains("fatal:", StringComparison.OrdinalIgnoreCase));
-
-            this.notifyIcon.ShowBalloonTip(5000, "GitSync", "Git fetching successfully.", ToolTipIcon.Info);
-
-            process.StartInfo.Arguments = "status";
-            process.Start();
-            process.WaitForExit(-1);
-
-            output = process.StandardOutput.ReadToEnd();
-            this.LogText(output, LogKind.Info);
-            error = process.StandardError.ReadToEnd();
-            this.LogText(error, LogKind.Error);
-
-            if (output.Contains("git pull", StringComparison.OrdinalIgnoreCase))
-            {
-                process.StartInfo.Arguments = "pull";
-                process.Start();
-                process.WaitForExit(-1);
-                output = process.StandardOutput.ReadToEnd();
-                this.LogText(output, LogKind.Info);
-                error = process.StandardError.ReadToEnd();
-                this.LogText(error, LogKind.Error);
-
-                this.notifyIcon.ShowBalloonTip(5000, "GitSync", "Git pulling successfully.", ToolTipIcon.Info);
             }
+
+            #endregion
+
+            #region Watch Git Repositories
+
+            private void WatchAllGitRepository()
+            {
+                this.UpdateLogFile();
+
+                if (this.tasks.Any())
+                {
+                    this.cancellationTokenSource.Cancel();
+                    this.cancellationTokenSource = new CancellationTokenSource();
+                    this.tasks.Clear();
+                }
+
+                foreach (string folder in this.watchFolders)
+                {
+                    Task task = new(() =>
+                    {
+                        this.WatchGitStatus(folder);
+                    }, this.cancellationTokenSource.Token);
+                    this.tasks.Add(task);
+                    task.ContinueWith(_ =>
+                    {
+                        this.tasks.Remove(task);
+                    });
+                    task.Start();
+                }
+            }
+
+            private void WatchGitStatus(string folder)
+            {
+                Process process = new()
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        WorkingDirectory = folder,
+                        FileName = "git",
+                        Arguments = "fetch",
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        StandardOutputEncoding = Encoding.UTF8,
+                        StandardErrorEncoding = Encoding.UTF8,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                    }
+                };
+                string? output;
+                string? error;
+                do
+                {
+                    process.Start();
+                    process.WaitForExit(-1);
+                    output = process.StandardOutput.ReadToEnd();
+                    this.LogText(LogKind.Info, output, folder);
+                    error = process.StandardError.ReadToEnd();
+                    this.LogText(LogKind.Error, error, folder);
+                } while (error.Contains("fatal:", StringComparison.OrdinalIgnoreCase));
+
+                this.notifyIcon.ShowBalloonTip(5000, "GitSync", $"Workfolder: {folder}{Environment.NewLine}Git fetching successfully.", ToolTipIcon.Info);
+
+                process.StartInfo.Arguments = "status";
+                process.Start();
+                process.WaitForExit(-1);
+
+                output = process.StandardOutput.ReadToEnd();
+                this.LogText(LogKind.Info, output, folder);
+                error = process.StandardError.ReadToEnd();
+                this.LogText(LogKind.Error, error, folder);
+
+                if (output.Contains("git pull", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StartInfo.Arguments = "pull";
+                    process.Start();
+                    process.WaitForExit(-1);
+                    output = process.StandardOutput.ReadToEnd();
+                    this.LogText(LogKind.Info, output, folder);
+                    error = process.StandardError.ReadToEnd();
+                    this.LogText(LogKind.Error, error, folder);
+
+                    this.notifyIcon.ShowBalloonTip(5000, "GitSync", $"Workfolder: {folder}{Environment.NewLine}Git pulling successfully.", ToolTipIcon.Info);
+                }
+            }
+
+            #endregion
+
         }
-
-        #endregion
-
     }
-}
